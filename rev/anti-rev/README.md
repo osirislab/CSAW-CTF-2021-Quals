@@ -13,4 +13,5 @@
     - https://www.malwinator.com/2016/01/03/part-2-antidebug/
     - https://www.usenix.org/system/files/conference/3gse15/3gse15-feng.pdf
     - https://malwareunicorn.org/workshops/re102#13
+    - http://staff.ustc.edu.cn/~bjhua/courses/security/2014/readings/anti-disas.pdf
     
