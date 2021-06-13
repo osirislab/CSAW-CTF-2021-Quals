@@ -19,3 +19,6 @@
 - Encrypted file names are the hash of the contents of the original file
 - AES CTR mode
 - Generates its own key and runs
+
+### Reference:
+- Not part of the challenge. Previous solve from HackTheBox CTF, reference material for writing the encryptor.
