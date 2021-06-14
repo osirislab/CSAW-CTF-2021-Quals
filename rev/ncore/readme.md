@@ -17,6 +17,6 @@ MOVF/MOVT, (MOVE FROM/TO MEMORY): < OPCODE(3:0) | OP1(5:4) > | < ADDR(7:0) > <br
 OP1 is the destination register, OP1 <- MEM(ADDR) <br>
 ## Example Solution
 The ram file includes a solution, the code is like this: <br>
-ENT | JEQ R3,R0,8 | INC R0 | JMP 0 | MOVF R1, 0xBF | MOVFS R0, 0 | MOVT R0, 0xBF | INC R3 | INC R1 | MOVT R1, 9 | MOVT R3, 0xB | JMP 0xA |
+| ENT | JEQ R3,R0,8 | INC R0 | JMP 0 | MOVF R1, 0xBF | MOVFS R0, 0 | MOVT R0, 0xBF | INC R3 | INC R1 | MOVT R1, 9 | MOVT R3, 0xB | JMP 0xA |
 ## Remarks For a Sequel
 If this works out, it can very easily be used to make a sequel. I already have an idea for making a SPECTRE-type challenge, where they exploit speculative execution in the most tinyest of cores that can be prone to such thing, would be cool given all the hype and clout around SPECTRE!
