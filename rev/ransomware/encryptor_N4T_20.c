@@ -174,7 +174,7 @@ int inkripshun(FILE *infile, Struct *mats){
     EVP_CIPHER_CTX_cleanup(ctx);
 
     // Delete original file?  
-    // Have to return an int
+    // Have to return an int.
     return 0;
 };
 
