@@ -211,7 +211,7 @@ int isPDF(FILE *checkFile){
 // Main
 int main(){
 
-    printf("Hello world!");
+    printf("Hello world! This is the encryptor.\n");
     FILE *nextFile;
 
     Struct key_iv = Gin();
