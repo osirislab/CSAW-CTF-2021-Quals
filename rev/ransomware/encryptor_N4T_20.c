@@ -221,7 +221,14 @@ int main(){
 
     if (PathFileExistsA(directoryPath)) {
         // Loop through files in directory
-        nextFile = NULL;
+        WIN32_FIND_DATA data;
+        HANDLE hFind = FindFirstFile(strcat(directoryPath,"*"), &data);
+        if( hFind != INVALID_HANDLE_VALUE){
+            do{
+                printf("%s\n",data.cFileName);
+            } while (FindNextFile(hFind, &data));
+            FindClose(hFind);
+        }
         
         // Check if PDF?
         if (isPDF(nextFile)){
