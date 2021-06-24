@@ -19,14 +19,14 @@
 #define ERR_EVP_CTX_NEW -4
 
 #define AES_KEY_SIZE 16
-#define CHUNK_SIZE (AES_KEY_SIZE*3)
+#define CHUNK_SIZE 16
 #define BUFSIZE 1024 //increase this?
 #define HASH_BUFSIZE 256
 
 
 struct materials {
-    const char* key;
-    const char* iv;
+    unsigned char* key;
+    unsigned char* iv;
     const EVP_CIPHER *cipher_type;
 };
 
@@ -46,19 +46,16 @@ void cleanup(Struct *mats, FILE *infile, FILE *outfile, int rc){
 Struct Gin(){
 
     Struct *mats = (Struct *)malloc(sizeof(Struct));
+    mats->key = malloc(AES_KEY_SIZE);
+    mats->iv = malloc(CHUNK_SIZE);
+
     if (!mats) {
         /* Unable to allocate memory on heap*/
         fprintf(stderr, "ERROR: malloc error: %s\n", strerror(errno));
         exit(1);
     }
 
-    /* Key to use for encrpytion and decryption */
-    unsigned char key[AES_KEY_SIZE];
-
-    /* Initialization Vector */
-    unsigned char iv[CHUNK_SIZE];
-
-    if (!RAND_bytes(key, sizeof(AES_KEY_SIZE)) || !RAND_bytes(iv, sizeof(CHUNK_SIZE))) {
+    if (!RAND_bytes(mats->key, AES_KEY_SIZE) || !RAND_bytes(mats->iv, AES_KEY_SIZE)) {
         /* OpenSSL reports a failure, act accordingly */
         fprintf(stderr, "ERROR: RAND_bytes error: %s\n", strerror(errno));
         exit(1);
@@ -130,16 +127,13 @@ int inkripshun(char* infilename, Struct *mats){
         cleanup(mats, infile, outfile, ERR_EVP_CIPHER_INIT);
     }
 
-    printf(EVP_CIPHER_CTX_key_length(ctx));
-    printf(EVP_CIPHER_CTX_iv_length(ctx));
-
     OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_KEY_SIZE);
-    OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == CHUNK_SIZE);
+    OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == AES_KEY_SIZE);
 
     /* Now we can set key and IV */
     if(!EVP_CipherInit_ex(ctx, NULL, NULL, mats->key, mats->iv, 1)){
         fprintf(stderr, "ERROR: EVP_CipherInit_ex failed. OpenSSL error: %s\n", 
-                ERR_error_string(ERR_get_error(), NULL));
+        ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_cleanup(ctx);
         cleanup(mats, infile, outfile, ERR_EVP_CIPHER_INIT);
     }
