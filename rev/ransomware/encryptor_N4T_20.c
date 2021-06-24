@@ -69,7 +69,7 @@ Struct Gin(){
 
 
 // AES-CTR
-int inkripshun(char* infilename, Struct *mats){
+int inkripshun(char* basePath, char* infilename, Struct *mats){
 
     printf("In inkripshun");
     FILE *infile;
@@ -84,7 +84,7 @@ int inkripshun(char* infilename, Struct *mats){
 
     // Hash contents
 
-    unsigned char outfileName[SHA256_DIGEST_LENGTH];
+    unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
 
@@ -94,7 +94,7 @@ int inkripshun(char* infilename, Struct *mats){
     while(1){
     
     // Read in data in blocks until EOF. Update the ciphering with each read.
-    num_bytes_read1 = fread(hashbuf, sizeof(unsigned char), BUFSIZE, infile);
+    num_bytes_read1 = fread(hashbuf, 1, BUFSIZE, infile);
     if (ferror(infile)){
         fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
         cleanup(mats, infile, outfile, errno);
@@ -107,16 +107,24 @@ int inkripshun(char* infilename, Struct *mats){
     if (num_bytes_read1 < BUFSIZE) {
         /* Reached End of file */
         break;
-    }
-    SHA256_Final(outfileName, &sha256);
-    printf(outfileName);
-    }
+    }}
+    SHA256_Final(hash, &sha256);
+    printf("%02x", hash);
+    
 
     rewind(infile);    
     
+
+    char outfileName[(strlen(basePath) + SHA256_DIGEST_LENGTH + 17)];
     //char outfileName[strlen(infilename) + 13];
     //strcpy(outfileName,infilename);
+    printf(outfileName);
+    strcat(outfileName, basePath);
+    printf(outfileName);
+    strcat(outfileName, hash);
+    printf(outfileName);
     strcat(outfileName,".pdf.encryptastic");
+    printf(outfileName);
     
 
     outfile = fopen(outfileName, "wb");
@@ -239,6 +247,8 @@ int main(){
     char* directoryPath = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");    
     char directoryDupe[strlen(directoryPath) + 1];
     strcpy(directoryDupe, directoryPath);
+    char basePath[strlen(directoryPath) + 1];
+    strcpy(basePath, directoryPath);
 
     if (PathFileExistsA(directoryPath)) {
         // Loop through files in directory
@@ -247,7 +257,7 @@ int main(){
         if( hFind != INVALID_HANDLE_VALUE){
             do{
                 printf("%s\n",data.cFileName);
-                inkripshun(strcat(directoryDupe,data.cFileName), &key_iv);
+                inkripshun(basePath,strcat(directoryDupe,data.cFileName), &key_iv);
             } while (FindNextFile(hFind, &data));
             FindClose(hFind);
         };
