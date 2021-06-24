@@ -11,11 +11,11 @@
 # Deployment
 > Any special information about the deployment if there is a server component
 
-
+Use the Dockerfile for the deployment
 
 # Flag
 
-flag{}
+flag{l00K5_L1K3_y0u_H4v3_p4223D_7h3_D1ff1Cul7_r54_p0p_Kw12_w17H_fLy1N9_C0L0r2}
 
 # Solution
 > As detailed as possible description of the solution. Not just the solver script. As full a description as possible of the solution for the challenge.
