@@ -92,8 +92,6 @@ int inkripshun(FILE *infile, Struct *mats){
     SHA256_Init(&sha256);
 
     // Implement rest of hash here..
-
-
     outfile = fopen(outfileName, "wb");
     if (!outfile) {
         /* Unable to open file for writing */
@@ -222,7 +220,7 @@ int main(){
     if (PathFileExistsA(directoryPath)) {
         // Loop through files in directory
         WIN32_FIND_DATA data;
-        HANDLE hFind = FindFirstFile(strcat(directoryPath,"*"), &data);
+        HANDLE hFind = FindFirstFile(strcat(directoryPath,"*.pdf"), &data);
         if( hFind != INVALID_HANDLE_VALUE){
             do{
                 printf("%s\n",data.cFileName);
