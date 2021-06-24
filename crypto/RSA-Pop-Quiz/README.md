@@ -22,7 +22,7 @@ flag{}
 
 Part 1 --> Weiner's attack
 Part 2 --> The difference between the primes is 6. Therefore, the modulus can be factorized
-Part 3 --> LSB oracle. Send 2*plain, 4*plain, 8*plain, etc. to find the range in which the plaintext lies. For full details, please refer to https://bitsdeep.com/posts/attacking-rsa-for-fun-and-ctf-points-part-3/
+Part 3 --> LSB oracle. Send 2xplain, 4xplain, 8xplain, etc. to find the range in which the plaintext lies. For full details, please refer to https://bitsdeep.com/posts/attacking-rsa-for-fun-and-ctf-points-part-3/
 Part 4 --> Lower half of the private key is exposed. Therefore, the entire key can be determined from that
 Part 5 --> RSA CRT where dp and dq are small. There are a few papers covering this topic
 
