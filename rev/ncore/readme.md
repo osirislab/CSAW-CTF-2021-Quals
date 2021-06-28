@@ -21,4 +21,9 @@ OP1 is the destination register, OP1 <- MEM(ADDR) <br>
 The ram file includes a solution, the code is like this: <br>
 | ENT | JEQ R3,R0,8 | INC R0 | JMP 0 | MOVF R1, 0xBF | MOVFS R0, 0 | MOVT R0, 0xBF | INC R3 | INC R1 | MOVT R1, 9 | MOVT R3, 0xB | JMP 0xA |
 ## Remarks For a Sequel
-If this works out, it can very easily be used to make a sequel. I already have an idea for making a SPECTRE-type challenge, where they exploit speculative execution in the most tinyest of cores that can be prone to such thing, would be cool given all the hype and clout around SPECTRE!
+1. If this works out, it can very easily be used to make a sequel. I already have an idea for making a SPECTRE-type challenge, where they exploit speculative execution in the most tinyest of cores that can be prone to such thing, would be cool given all the hype and clout around SPECTRE!
+2. A simple tweak: make it so that on failed ENT we can _know_ whether our key was bigger or smaller than the hw key, and then lower the simulation time: so that they need to have an implementation that doesn't just mindlessly brute-force, but needs to do a binary search to be finished in time. Would make the shellcode harder.
+**I am very bad at score estimation** : my guess is 150 for this version and from source, 250 if we give them the VVP file and not the source, and 300 with addition of (2).   
+## TODO
+1. How many bits to have for the key? If it is too much, it would take longer time to brute-force it, and higher load on us, if it is too small, well I don't know. 
+2. Deployment: do we need some sort of rate-limiting? Or kill process if it's running and new submission comes by the same team? Also: we need a python wrapper + dockerfile. 
