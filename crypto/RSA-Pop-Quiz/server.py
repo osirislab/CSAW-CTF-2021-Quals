@@ -1,5 +1,5 @@
 from Crypto.Util.number import getPrime, bytes_to_long, inverse
-import random, math
+import random, math, json
 from sympy import isprime
 
 with open("flag.txt",'r') as f:
@@ -14,18 +14,11 @@ m5 = "" # For RSA-CRT
 def wiener_attack():
 	m_bytes = bytes(m1,'utf-8')
 	m = bytes_to_long(m_bytes)
-	p = getPrime(512)
-	q = getPrime(512)
-	N = p*q
-	phi = (p-1)*(q-1)
-	while True:
-		try:
-			d = random.randint(2,pow(N,1/4)//3)
-			print(d)
-			e = inverse(d,phi)
-			break
-		except:
-			continue
+	with open('wiener_attack.json','r') as f:
+		RSA = json.loads(f.read())
+	index = random.randint(0,len(RSA)-1)
+	N = RSA[index]['N']
+	e = RSA[index]['e']
 	print("N =",N)
 	print("e =",e)
 	print("c =",pow(m,e,N))
@@ -33,18 +26,14 @@ def wiener_attack():
 def sexy_primes():
 	m_bytes = bytes(m2,'utf-8')
 	m = bytes_to_long(m_bytes)
-	while True:
-		p = getPrime(512)
-		q = p + 6
-		e = 65537
-		if isprime(q):
-			N = p*q
-			phi = (p-1)*(q-1)
-			d = inverse(e,phi)
-			print("N =",N)
-			print("e =",e)
-			print("c =",pow(m,e,N))
-			break
+	with open('sexy_primes.json','r') as f:
+		RSA = json.loads(f.read())
+	index = random.randint(0,len(RSA)-1)
+	N = RSA[index]['N']
+	e = RSA[index]['e']
+	print("N =",N)
+	print("e =",e)
+	print("c =",pow(m,e,N))
 
 def lsb_oracle():
 	m_bytes = bytes(m3,'utf-8')
@@ -67,17 +56,12 @@ def lsb_oracle():
 def partial_key():
 	m_bytes = bytes(m4,'utf-8')
 	m = bytes_to_long(m_bytes)
-	while True:
-		try:
-			p = getPrime(512)
-			q = getPrime(512)
-			N = p*q
-			phi = (p-1)*(q-1)
-			e = 17
-			d = inverse(e,phi)
-			break
-		except:
-			continue
+	with open('partial_key.json','r') as f:
+		RSA = json.loads(f.read())
+	index = random.randint(0,len(RSA)-1)
+	N = RSA[index]['N']
+	e = RSA[index]['e']
+	d = RSA[index]['d']
 	print("N =",N)
 	print("e =",e)
 	print("d0 =",int(bin(d)[-512:],2))

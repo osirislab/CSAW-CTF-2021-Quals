@@ -25,4 +25,4 @@ Part 2 --> Implement MOV attack
 Part 3 --> It is a singular curve. That makes the discrete log a lot easier
 
 # TO DO
-Complete implementation of curve generation for part 2 and part 3
+Complete implementation of curve generation for part 2

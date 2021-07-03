@@ -12,6 +12,9 @@ WORKDIR /opt/chal
 
 COPY flag.txt .
 COPY generator.py .
+COPY wiener_attack.json .
+COPY sexy_primes.json .
+COPY partial_key.json .
 
 EXPOSE 5000
 
