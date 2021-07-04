@@ -44,3 +44,10 @@ Randomly generate set of bases, once they get the right order, calculate the bit
 Save key in one file, and the flag in the other.
 Convert key to binary, put binary through bases, convert to ASCII -> password!
 Give password to get flag!
+
+Given the binary of the flag and the arrows (conjugates), apply the bases to each arrow directly, and each resulting diagonal arrow must be corrected.
+Perform bases on given arrows, throw out resulting diagonals.
+Encoding for addition, decoding for subtraction - give hint with the bases
+Perform rotation on conjugate
+x - add 45 degrees
++ - no change
