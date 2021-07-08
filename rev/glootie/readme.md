@@ -13,7 +13,7 @@ It is (by design) not a complex convoluted format, and the kernel is _very_ simp
 ## Commentary
 There are many ways to expand on this if it is too easy, or for a harder sequel in finals: The compute shader can be made more complex (than a simple XOR thing). Sensor data can be integrated into calculations. Adding another level the whole thing, involving some java stuff. etc. 
 I am very bad at guessing scores, so take it with a tablespoon of salt, but my estimation for score is ~ 200
-## Xtra Hint
+## Xtra Hint (to paste into the emulator)
 ```bash
-adb shell input text 'flag{alW1yz_u3e_d1nGleB0p_4_fl33B}'
+adb shell input text 'password'
 ```
