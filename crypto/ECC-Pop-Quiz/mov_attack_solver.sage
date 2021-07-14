@@ -1,7 +1,7 @@
 # Curve parameters --> Replace the next three lines with given values
-p = 325123080912906649178181191307324899933
-a = 0
-b = 1
+p = 26715668608298314141647233522012293003
+a = 26715668608298314141647233522012293002
+b = 0
 
 # Define curve
 E = EllipticCurve(GF(p), [a, b])
@@ -9,31 +9,33 @@ order = E.order()
 print(is_prime(order))
 
 # Replace the next two lines with given values
-P1 = E(124556068645057338380771714502532714210 , 228761596578706057395092255392100224637)
-P2 = E(191642239889982926313263865049824333391 , 196465992158475023050622406861132079586)
-Po = P1.order()
+P1 = E(24166409859081021035853185167435581465 , 24392656442309501164435382417913623021)
+P2 = E(5110634388699635634648935814056445376 , 7283632616912488220869842021257386953)
+n = P1.order()
 
 k = 1
 while (p**k - 1) % order:
-    k += 1
+	k += 1
 
-F2.<x> = GF(p^k)
-E2 = E.change_ring(F2)
-P2 = E2(P1)
-Q2 = E2(P2)
+K.<a> = GF(p**k)
+EK = E.base_extend(K)
+PK = EK(P2)
+GK = EK(P1)
 
 while True:
-	R = E2.random_point()
-	Ro = R.order()
-	g = gcd(Ro, Po)
-	S = (Ro//g)*R
-	So = S.order()
-	if Po/So in ZZ and Po == So:
+	R = EK.random_point()
+	m = R.order()
+	d = gcd(m,n)
+	Q = (m//d)*R
+	if n / Q.order() not in ZZ:
+		continue
+	if n == Q.order():
 		break
 
-print("Finding the pairings")
-alpha = P2.weil_pairing(S,Po)
-beta = Q2.weil_pairing(S,Po)
+print('Computing pairings')
+alpha = GK.weil_pairing(Q,n)
+beta = PK.weil_pairing(Q,n)
+
 print("Computing the log")
 dd = beta.log(alpha)
 print(dd)

@@ -1,7 +1,8 @@
   {
     "name": "ECC Pop Quiz",
     "category": "crypto",
-    "description": "",
-    "flag": "flag{}",
+    "author": "Dhyey Shah",
+    "description": "Your crypto professor has taught y'all about ECC and now, here's a pop quiz regarding some of the attacks on it. See if you can pass the quiz!",
+    "flag": "flag{4Ll_0f_tH353_4tT4cK5_R3lY_0N_51mPl1FY1n9_th3_D15cr3t3_l09_pr08l3m}",
     "points": 300
 }
