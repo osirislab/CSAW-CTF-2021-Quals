@@ -4,6 +4,7 @@ MAINTAINER Dhyey
 RUN apt-get update && apt-get install -y python3 python3-pip
 RUN pip3 install pycryptodome
 RUN pip3 install sympy
+RUN pip3 install inputimeout
 RUN apt-get install -y socat && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -M chal
