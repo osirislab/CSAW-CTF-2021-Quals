@@ -13,7 +13,7 @@ WORKDIR /opt/chal
 
 COPY flag.txt .
 COPY server.py .
-COPY List of Pokemon Names.txt .
+COPY "List of Pokemon Names.txt" .
 
 EXPOSE 5000
 
