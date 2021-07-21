@@ -24,8 +24,9 @@ MORSE_CODE_DICT = { 'A':'.-', 'B':'-...',
 with open("flag.txt",'r') as f:
 	flag = f.read()
 
-with open("List of Pokemon Names.txt",'r') as f:
-	pokemon = f.read().split()
+with open("Pokemon_names.txt",'r') as f:
+	data = f.read()
+	pokemon = data.split('\n')[:-1]
 
 def encryption(name):
 	rot = codecs.encode(name,'rot_13')
