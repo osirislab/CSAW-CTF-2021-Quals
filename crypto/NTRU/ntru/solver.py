@@ -2,9 +2,10 @@
 from pwn import remote, process
 import sys
 import time
+import binascii
 
 host = "127.0.0.1"
-port = 8779
+port = 8178
 
 #server = remote(host, port)
 server = process('python3 ./server.py', shell=True)
@@ -51,41 +52,26 @@ class UE(BaseException):
 		pass
 
 def main():
-	spell = b"cat flag.txt"
-	'''
-	c = int(spell.hex(), 16)
-	r = 1
-	sig_c_prime = None 
+	server.recvuntil("cast <ciphertext> <spell>\n")
+	#server.send("encrypt 61616161")
+	#msg = b"test message"
+	msg = b"cat flag.txt"
+	server.send(" ".join(["encrypt", msg.hex()]) + "\n")
+	#server.interactive()
+	ct = server.recvuntil("\n").strip()
+	#print("ct = " + str(ct))
+	ct_bytes = binascii.unhexlify(ct)
+	ct_bytes_list = list(ct_bytes)
+	ct_bytes_list[len(ct_bytes_list)-2]=ct_bytes_list[len(ct_bytes_list)-2]+1
+	new_ct = binascii.hexlify(bytes(ct_bytes_list))
+	#print(b"new_ct = " + new_ct)
+	#print(str(new_ct.__class__))
+	server.send(b" ".join([b"cast", new_ct, binascii.hexlify(msg)])+b"\n")
+	server.interactive()
 
-	while sig_c_prime is None:
-		try:
-			c_prime = mul(c, powmod(r, e, n)) % n
-			msg = hex_to_byte(hex(c_prime)[2:])
-
-			if any([x in list(map(ord, [y for y in "\0 \t\r\n"])) for x in msg]):
-				raise UE()
-			resp = try_sign(msg)
-
-			if resp is not None:
-				sig_c_prime = int(resp, 16)
-				break
-		except KeyboardInterrupt:
-			raise
-		except UE:
-			pass
-		r += 1
-
-	sig = hex( divm(sig_c_prime, r, n) )[2:]
-	print("signature:", hex_to_byte(sig))
-	flag = try_cast(spell, hex_to_byte(sig))
-	print("FLAG:", flag)
-	'''
 
 if __name__ == "__main__":
-	server.recvuntil("cast <ciphertext> <spell>\n")
-	server.send("encrypt 61616161")
-	server.interactive()
-	print(server.recvuntil("\\\\\r\n"))
-	try_str = b"hocus  pocus"
-	assert(try_cast(try_str, hex_to_byte(try_sign(try_str).decode("utf-8"))))
+	#print(server.recvuntil("\\\\\r\n"))
+	#try_str = b"hocus  pocus"
+	#assert(try_cast(try_str, hex_to_byte(try_sign(try_str).decode("utf-8"))))
 	main()

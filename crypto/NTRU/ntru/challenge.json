@@ -1,0 +1,11 @@
+{
+    "name":"spellbook",
+    "category":"pwn",
+    "author": "N4T_20",
+    "description":"Mordenkainen says he's a better caster than Leomund because his sentient spellbook has better security than Leomund's secret chest. Can you pwn it? `nc {box} {port}`",
+    "flag":"flag{1n73nd3d_s0lut10n_r37urn5_t0_BSS_r0p_ch41n_fr0m_pr1ntf_p051710n4l}",
+    "points":400,
+    "files":["spellbook"],
+    "box": "red.chal.csaw.io",
+    "internal_port": 5000
+}

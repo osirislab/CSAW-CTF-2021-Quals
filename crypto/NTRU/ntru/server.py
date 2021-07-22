@@ -17,8 +17,8 @@ import math
 #e = 65537
 #d = SECRET.d
 
-priv_key_file = "myKey.priv.npz"
-pub_key_file = "myKey.pub.npz"
+priv_key_file = "private_key"
+pub_key_file = "public_key"
 input_file = "flag.txt"
 log = logging.getLogger("ntru")
 
@@ -29,7 +29,10 @@ log = logging.getLogger("ntru")
 def encrypt_command(data):
     #with open(input_file, 'rb') as file:
     #    input = file.read()
+    #print("In encrypt_command")
     input_arr = np.unpackbits(np.frombuffer(data, dtype=np.uint8))
+    #print("data = " + str(data))
+    #print("input_arr = " + str(input_arr))
     input_arr = np.trim_zeros(input_arr, 'b')
     log.info("POLYNOMIAL DEGREE: {}".format(max(0, len(input_arr) - 1)))
     log.debug("BINARY: {}".format(input_arr))
@@ -44,17 +47,25 @@ def encrypt_command(data):
 
 # Make sure the ciphertext decrypts to the spell.
 def verify(data, ct):
+    return data in decrypt_command(ct)
     print("In verify")
-    return data == decrypt_command(ct)
+    pt = decrypt_command(ct)
+    print("returned from decrypt_command")
+    print(b"decrypted ciphertext = " + pt)
+    print(b"data = " + data)
+    result = data in pt
+    print("result = " + str(result))
+    return result
     #return int(data.hex(), 16) == pow(int(sig.hex(), 16), e, n)
 
 def decrypt_command(data):
     #with open(input_file, 'rb') as file:
     #    input = file.read()
-    print("In decrypt_command")
-    print("data = " + str(data))
-    data = bytes.fromhex(data)
-    print("data is now " + str(data))
+    #print("In decrypt_command")
+    #print(data)
+    #print(str(data.__class__))
+    #data = bytes.fromhex(data)
+    #print("data is now " + str(data))
     input_arr = np.unpackbits(np.frombuffer(data, dtype=np.uint8))
     input_arr = np.trim_zeros(input_arr, 'b')
     log.info("POLYNOMIAL DEGREE: {}".format(max(0, len(input_arr) - 1)))
@@ -64,10 +75,10 @@ def decrypt_command(data):
     # def decrypt(priv_key_file, input_arr, bin_input=False, block=False):
     log.info("In decrypt_command: generated output. Writing to stdout. ")
     output = np.packbits(np.array(output).astype(np.int)).tobytes().hex()
-    print("output class = " + str(output.__class__))
-    print("output = " + str(output))
+    #print("output class = " + str(output.__class__))
+    #print("output = " + str(output))
     output = bytes.fromhex(output)
-    print("as a string that is " + str(output))
+    #print("as a string that is " + str(output))
     return output
 
 
@@ -85,7 +96,7 @@ def encrypt(pub_key_file, input_arr, bin_output=False, block=False):
             raise Exception("Input is too large for current N")
         output = (ntru.encrypt(Poly(input_arr[::-1], x).set_domain(ZZ),
                                random_poly(ntru.N, int(math.sqrt(ntru.q)))).all_coeffs()[::-1])
-        print("In encrypt: output = " + str(output))
+        #print("In encrypt: output = " + str(output))
     else:
         log.info("In encrypt: about to pad. Input_arr = " + input_arr)
         input_arr = padding_encode(input_arr, ntru.N)
@@ -144,8 +155,8 @@ def main():
     #if args['--debug']:
     #    ch.setLevel(logging.DEBUG)
     #elif args['--verbose']:
-    ch.setLevel(logging.INFO)
-    #ch.setLevel(logging.WARN)
+    #ch.setLevel(logging.INFO)
+    ch.setLevel(logging.WARN)
     #else:
     #ch.setLevel(logging.WARN)
     root.addHandler(ch)
@@ -183,9 +194,10 @@ def main():
     #print("Unlimited spell slots with a 3-year subscription!\n")
 
     #print("Send us your spell and its encrypted version and we will cast it for you.\n")
-
+    #sys.stdout.flush()
     print("encrypt <spell>")
     print("cast <ciphertext> <spell>")
+    sys.stdout.flush()
     #print("\\\\")
     #data = b"flag{t35t_fl4g}"
     #data = b"test"
@@ -201,44 +213,50 @@ def main():
 
         try:
             if parts[0] == "encrypt":
-                print("In encrypt loop...")
-                print("parts[1] = " + str(parts[1]))
-                print(" which has class " + str(parts[1].__class__))
-                print(" and length " + str(len(parts[1])))
+                #print("In encrypt loop...")
+                #print("parts[1] = " + str(parts[1]))
+                #print(" which has class " + str(parts[1].__class__))
+                #print(" and length " + str(len(parts[1])))
                 spell = parts[1]#bytes.fromhex(parts[1])
-                print("spell = " + spell)
-                spell = bytes.fromhex(spell)
+                #print("spell = " + spell)
+                #spell = bytes.fromhex(spell)
                 #if spell.find(b"cat flag.txt") != -1:
                 #    raise Exception()
                 print(encrypt_command(bytes.fromhex(spell)))
+                sys.stdout.flush()
                 #print("{}".format(hex(encrypt(spell))[2:]))
             elif parts[0] == "cast":
                 ct = bytes.fromhex(parts[1])
                 spell = bytes.fromhex(parts[2])
 
                 # The ciphertext must decrypt to the spell
-                if not verify(spell, ct):
+                if spell not in decrypt_command(ct):
+                #if not verify(spell, ct):
                     raise Exception()
 
                 if spell == b"cat flag.txt":
                     # The signature the user sends the server can't match that produced by the server when encrypting "cat flag.txt"
                     if encrypt_command(spell) == ct:
                         print("Hey, you tried to cast a forbidden spell.")
+                        sys.stdout.flush()
                         raise Exception()
                     else:
                         print("Something just appeared out of nowhere!")
-                        with open("flag") as file:
+                        with open("flag.txt") as file:
                             print("".join(file.readlines()))
                 else:
                     print("You cast your spell! It does nothing :(")
+                sys.stdout.flush()
             elif parts[0] in ["quit", "exit"]:
                 print("Vanishing!")
+                sys.stdout.flush()
                 return
             else:
                 raise Exception()
         except:
             print("Incorrect amount of magic focus...")
             print("...try again?")
+            sys.stdout.flush()
     
 if __name__ == "__main__":
     #test_str = b"this is not the string you're looking for"

@@ -1,1 +1,1 @@
-flag{t35t_fl4g}
+flag{1_h34rd_p0st-qu4ntum_crypt0_w45_h4rd_but_1t_w4s_NTRU}

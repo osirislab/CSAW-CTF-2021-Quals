@@ -141,6 +141,7 @@ if __name__ == '__main__':
                 input = file.read()
         log.info("---INPUT---")
         log.info(input)
+        log.info(str(input.__class__))
         log.info("-----------")
         if poly_input:
             input_arr = np.array(eval(input))
