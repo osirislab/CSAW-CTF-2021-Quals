@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM ubuntu:20.04
 MAINTAINER Dhyey
 
 RUN apt-get update && apt-get install -y python3 python3-pip
