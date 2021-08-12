@@ -1,4 +1,4 @@
-# Crack Me
+# Weak Password
 ## Challenge: 
 Can you crack Aaron’s password hash? He seems to like simple passwords. I’m sure he’ll use his name and birthday in it. Hash: 111cbe3201371926fec860dbe9cdfcc4
 
