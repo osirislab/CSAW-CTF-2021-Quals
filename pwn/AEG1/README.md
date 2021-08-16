@@ -34,3 +34,14 @@
     2. Make sure I can exploit it automatically
     3. Write C code that produces ten such binaries and checks that the user runs them and has then return a unique value like 100
     4. Consider making the challenge harder by adding features like the `encode` functions for UTCTF, or possibly a scripting challenge to solve to get to the pwnable section
+
+### UPDATE 8-14-21: 
+
+    During testing Eddie found that it's possible to pwn the challenge by overwriting the return address from printf_positional. I decided to scrap the approach of a single binary for a more robust one: now we have a daisy chain of N binary challenges, each running in their own docker containers. Each challenge does the following:
+    1. Prompts the user for a password, such that they have to pwn the previous challenge in the chain to get the new password
+    2. If the proper password is given, the binary prints out a hex dump of itself. The user then can reassemble and analyze the binary from the hex dump.
+    3. Runs the actual pwnable portion of the challenge. Assuming the user pwns it:
+    4. The Docker container contains the password and remote address and port of the next challenge to pwn in the chain.
+    5. The final Docker container contains the flag.
+
+    The framework for this is in the "framework" folder. The example challenge just spawns a shell after giving the binary to the user. For the framework I tested that I can retrieve the binary properly and wrote a solver that runs through the boxes, gets passwords, and trivially "pwns" each box before getting the final flag. Now we can use this to write auto-buffer overflow, auto-fmt-string, auto-ROP, and auto-heap challenges.
