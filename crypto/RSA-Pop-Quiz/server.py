@@ -9,7 +9,6 @@ m1 = "Wiener wiener chicken dinner" # For wiener's attack
 m2 = "Man, these primes sure are sexy" # For sexy primes
 m3 = "Wow, looks like this oracle is worthless" # For LSB oracle
 m4 = "I'll be careful next time to not leak the key" # For partial key
-m5 = "" # For RSA-CRT
 
 def wiener_attack():
 	m_bytes = bytes(m1,'utf-8')
@@ -69,10 +68,6 @@ def partial_key():
 	print("d0bits = 512")
 	print("nBits = 1024")
 
-def rsa_crt():
-	m_bytes = bytes(m5,'utf-8')
-	m = bytes_to_long(m_bytes)
-
 def main():
 	print("Part 1 --> This is one of the most common RSA attacks in CTFs!\n")
 	wiener_attack()
@@ -107,7 +102,7 @@ def main():
 		else:
 			print("Failed!")
 	
-	print("Part 4 --> Oops, looks like I leaked part of the private key. Hope that doesn't come back to bite me\n")
+	print("Part 4 --> Oops, looks like I leaked part of the private key. Hope that doesn't come back to bite me!\n")
 	partial_key()
 	while True:
 		print("\nWhat is the plaintext?")
@@ -117,17 +112,6 @@ def main():
 			break
 		else:
 			print("Failed!")
-	
-	"""print("Part 5\n")
-	rsa_crt()
-	while True:
-		print("\nWhat is the plaintext?")
-		answer = input("")
-		if answer == m5:
-			print("Success!")
-			break
-		else:
-			print("Failed!")"""
 	
 	print("\nCongrats on passing the RSA Pop Quiz! Here is your flag:",flag)
 
