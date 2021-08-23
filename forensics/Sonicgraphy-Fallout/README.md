@@ -7,6 +7,7 @@
 > Detailed description as it would need to be explained to other lab members
 
 This challenge has a video file embedded in one of the pictures of the zip file.
+Credit goes to Deebs/Fini-mun for the artwork of the comics.
 
 # Flag
 
