@@ -1,0 +1,9 @@
+  {
+    "name": "Sonicgraphy Fallout",
+    "category": "forensics",
+    "author": "Andrew Prajogi",
+    "description": "A hacker named Blue_Blur was recently arrested and is accused of hiding some evidence. The evidence was reported to have been hidden in the hacker's OC Sonic comic. See if you can find any hidden files. Reportedly, it was a 'video' of some sort. On the other hand, the comics are pretty good. Enjoy! :)",
+    "flag": "flag{R011in6_@r0und_@_7h3_$p33d_0f_50und}",
+    "points": 200,
+    "files": "Fallout - New Mobius.zip"
+}
