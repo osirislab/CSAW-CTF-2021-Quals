@@ -6,7 +6,7 @@
 # Description
 > Detailed description as it would need to be explained to other lab members
 
-5 different RSA attacks have to be used to crack 5 different ciphertexts
+4 different RSA attacks have to be used to crack 5 different ciphertexts
 
 # Deployment
 > Any special information about the deployment if there is a server component
