@@ -1,0 +1,10 @@
+{
+    "name":"word_games",
+    "category":"pwn",
+    "author": "comed-ian",
+    "description":"I need your help. I'm writing a paper and I need some fun words to add to it! `nc {box} {port}`",
+    "flag":"flag{Y0u_pu7_7h3_FUN_1n_FUNc710N}",
+    "points":350,
+    "files":["word_games.c", "flag.txt"],
+    "internal_port": 5000
+}

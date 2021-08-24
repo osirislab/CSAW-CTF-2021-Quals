@@ -1,0 +1,71 @@
+FROM archlinux:latest
+RUN pacman -Sy
+RUN pacman -S python --noconfirm && pacman -S gdb --noconfirm \
+    && pacman -S gcc --noconfirm && pacman -S lld --noconfirm \
+    && pacman -S vim --noconfirm
+RUN pacman -S wget --noconfirm && pacman -S python-pip --noconfirm
+RUN pip3 install pwntools
+RUN groupadd --gid 1000 newuser \
+    && useradd --home-dir /home/newuser --create-home --uid 1000 \
+        --gid 1000 --shell /bin/sh --skel /dev/null newuser
+WORKDIR /home/newuser
+RUN mkdir ./workspace
+USER newuser
+COPY ./a.c ./
+RUN gcc a.c -o a.out -g
+RUN wget -O ~/.gdbinit-gef.py -q https://github.com/hugsy/gef/raw/master/gef.py
+RUN echo source ~/.gdbinit-gef.py >> ~/.gdbinit
+
+
+# RUN mkdir /usr/src/linux-2.33
+# WORKDIR /tmp
+# RUN curl https://ftp.gnu.org/gnu/glibc/glibc-2.33.tar.gz -o glibc_2.33.tar.gz
+# RUN tar -xvf glibc_2.33.tar.gz
+# WORKDIR /tmp/glibc-2.33
+# RUN make headers_install INSTALL_HDR_PATH=/usr/src/linux-2.33
+# WORKDIR /usr/src/linux-2.33
+# RUN /home/newuser/workspace/glibc-2.33/configure --prefix=/usr --with-headers=/usr/src/linux-2.33/include
+# RUN make
+
+
+# RUN make install
+# USER newuser
+
+# RUN mkdir /usr/include2
+# RUN for i in $(ls /usr/include | grep -v ".h"); do mv $i /usr/include2; done
+# RUN mv /usr/include2/linux /usr/include/ && mv /usr/include2/x86_64-linux-gnu/asm /usr/include/
+# RUN apt-get -y install make
+# RUN apt install git -y
+# RUN apt install software-properties-common apt-transport-https curl -y
+# RUN apt install gdb=7.7.1-0ubuntu5~14.04.3 -y
+# RUN apt install gdbserver=7.7.1-0ubuntu5~14.04.3 -y
+# RUN git clone https://github.com/longld/peda.git ~/peda
+# RUN echo "source ~/peda/peda.py" >> ~/.gdbinit
+
+# RUN apt-get install python3 python3-dev libssl-dev libffi-dev build-essential -y
+# # RUN curl -fsSL -o- https://bootstrap.pypa.io/pip/3.4/get-pip.py | python3
+# # Configure python identical to MBE VM
+# # RUN apt install python=3.5
+# RUN apt install python-dev=2.7.5-5ubuntu3 -y
+# # RUN apt install python-pip=9.0
+# RUN apt install libssl-dev=1.0.1f-1ubuntu2.27 -y
+# RUN apt install libffi-dev=3.1~rc1+r3.0.13-12ubuntu0.2 -y
+# RUN apt install build-essential=11.6ubuntu6 -y
+# # RUN pip install pwntools
+# # RUN curl https://bootstrap.pypa.io/pip/3.4/get-pip.py | python3
+# #RUN python2 -m pip install --upgrade pip==7.0.3
+# # RUN apt install wget
+# # RUN wget  https://www.python.org/ftp/python/2.7.6/Python-2.7.6.tgz && \
+# # tar xf Python-2.7.6.tgz
+# # WORKDIR /Python-2.7.6
+# # RUN ./configure && make && make install
+# # RUN apt-get install python2.7-dev python-pip pandoc -y
+# # RUN git clone -b 3.9.0 https://github.com/Gallopsled/pwntools.git
+# #RUN python3 -m pip install --upgrade pip==7.0.3
+# #RUN python3 -m pip install --upgrade pwntools==3.0.0
+# # RUN apt install ltrace -y
+# # RUN python2 -m pip install --upgrade pwntools
+# RUN curl -fsSL -o- https://bootstrap.pypa.io/pip/3.4/get-pip.py | python3
+# RUN pip3 install pynacl==1.2.1
+
+
