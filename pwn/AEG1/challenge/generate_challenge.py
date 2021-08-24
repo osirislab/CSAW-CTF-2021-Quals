@@ -26,8 +26,9 @@ from random import seed
 seed = 22340897
 #seed(seed)
 
-N = 4
+N = 6
 level_one_threshold = 2
+level_two_threshold = 4
 #level_two_threshold = 4
 # challenges_per_level = 20 # Not used, just a note to myself here
 os.system("mkdir binaries")
@@ -38,7 +39,21 @@ for round_number in range(N, 0, -1):
     os.system("mkdir round_{}".format(round_number))
     os.chdir("./round_{}".format(round_number))
     password = create_password()
-    if round_number > level_one_threshold: # level 2
+    if round_number > level_two_threshold: # level 3
+        generate_level_two_source_code(filename_stem="binary_{}".format(round_number), password=password, random_seed=seed) # Source code is the same
+        seed+=1
+        os.system("gcc -fpie -no-pie binary_{0}.c -o binary_{0}".format(round_number))
+        os.system("strip binary_{0}".format(round_number))
+        os.system("xxd binary_{0} > binary_{0}.txt".format(round_number))
+        # Generate Dockerfile
+        if round_number == N:
+            os.system("echo {0} > flag.txt".format(flag))
+            generate_final_Dockerfile(filename="Dockerfile", round_number=round_number, port_base=port_base)
+        else:
+            os.system("echo \"Sorry, but your flag is in another box! nc {0} {1} and use password {2}\" > message.txt".format(box, (port_base+round_number+1), next_password))
+            os.system("cp ../round_{0}/binary_{0} ./binary_{0}".format((round_number+1)))
+            generate_intermediate_Dockerfile(filename="Dockerfile", round_number=round_number, port_base=port_base) # It's fine for all Docker containers to have i386 support
+    elif round_number > level_one_threshold: # level 2
         generate_level_two_source_code(filename_stem="binary_{}".format(round_number), password=password, random_seed=seed)
         seed+=1
         os.system("gcc -fpie -no-pie binary_{0}.c -o binary_{0}".format(round_number))
