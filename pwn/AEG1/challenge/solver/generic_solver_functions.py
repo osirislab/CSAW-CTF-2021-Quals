@@ -2,6 +2,7 @@
 from fileparsing import *
 from pwn import *
 
+
 def get_binary(password, p, output_filename):
     p.recvuntil("continue:\n")
     p.send(password + b"\n")

@@ -55,8 +55,8 @@ def parse_a_file(file):
             done = True
             break
         file = file[file.find(b"\n")+1:]
-        print("new file length = " + str(len(file)))
-        print(b"Parsing line: " + next_line)
+        #print("new file length = " + str(len(file)))
+        #print(b"Parsing line: " + next_line)
         line_bytes = parse_a_line(next_line)
         #print("finished parse_a_line")
         if line_bytes == "-1":

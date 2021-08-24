@@ -2,8 +2,8 @@
 # generate_fmt_string_source_code.py
 from random import choice, seed
 
-def generate_level_one_source_code(filename_stem, password):
-    seed(987234)
+def generate_level_one_source_code(filename_stem, password, random_seed):
+    seed(random_seed)
     file_content_part_one = f"""#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,9 +15,7 @@ def generate_level_one_source_code(filename_stem, password):
 #define FALSE 0
 #define BINARYNAME \"{filename_stem}.txt\"
 
-#define CONTENTLENGTH 400
-extern void *_GLOBAL_OFFSET_TABLE_;
-#define PRINTF_GOT_OFFSET 4
+#define CONTENTLENGTH 150
 
 char* password = \"{password}\";\n\n"""
 
@@ -69,6 +67,110 @@ void runChallenge(){{
     char userinput[CONTENTLENGTH];
     printf(\"*** Procrastination Simulator Level One ***\\n\\n\");
     printf(\"   Help! I need to write forty reports by Sunday afternoon. Give me some content and I will generate a report!!\");
+    puts(\"\");
+    printf(\"> \");
+    fflush(stdout);
+    fgets(userinput, CONTENTLENGTH, stdin);
+    puts(\"Thanks! I\'ll work with the following:\\n\");
+    printf(userinput);
+    puts(\"Time to go write this!\");
+    exit(0);
+}}
+
+int main(int argc, char **argv){{
+    puts(\"Welcome to the AEG challenges!\");
+    char user_input[PASSWORDLENGTH];
+    puts(\"Input password to continue:\");
+    printf(\"> \");
+    fflush(stdout);
+    fgets(user_input, PASSWORDLENGTH+2, stdin);
+    if (password_is_correct(user_input)){{
+        puts(\"Correct password! :)\");
+        puts(\"Here is the binary that is currently running on this box: \");
+        puts(\"-------------------------------------------------------------------\");
+        printBinary();
+        puts(\"-------------------------------------------------------------------\");
+        puts(\"\\nProceeding to the challenge...\\n\");
+        fflush(stdout);
+        runChallenge();
+    }}else{{
+        printf(\"Incorrect password. :(\");
+    }}
+    return 0;
+}}"""
+    f = open(filename_stem+".c", "w")
+    f.write(file_content_part_one)
+    f.write(function_list)
+    f.write(file_content_last_part)
+    f.close()
+    return
+
+
+def generate_level_two_source_code(filename_stem, password, random_seed):
+    seed(random_seed)
+    file_content_part_one = f"""#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
+#define PASSWORDLENGTH 32
+#define TRUE 1
+#define FALSE 0
+#define BINARYNAME \"{filename_stem}.txt\"
+
+#define CONTENTLENGTH 200
+
+char* password = \"{password}\";\n\n"""
+
+    function_list=f"""""";
+    win_location = choice(range(100))+1
+    for i in range(100):
+        if i == win_location:
+            function_list += f"""void win(){{
+    system("/bin/sh");
+    exit(0);
+}}\n"""
+        else:
+            function_list += f"""void function{i}(){{
+    exit(0);
+}}\n"""
+    print("function_list = " + function_list)
+    file_content_last_part = f"""
+char equalArrays(char a[], char b[], int size){{
+    for(int i = 0; i < size; i++){{
+        if(a[i]!=b[i]){{
+            return FALSE;
+        }}
+    }}
+    return TRUE;
+}}
+
+void printBinary(){{
+    char c;
+    FILE * f;
+    f = fopen(BINARYNAME, "r");
+    if(f == NULL){{
+        puts("Error reading hex of binary");
+        exit(0);
+    }}
+    c = fgetc(f);
+    while (c != EOF){{
+        printf("%c", c);
+        c = fgetc(f);
+    }}
+    fclose(f);
+    return;
+}}
+
+int password_is_correct(char* user_input){{
+    return equalArrays(password, user_input, PASSWORDLENGTH-1);
+}}
+
+void runChallenge(){{
+    char userinput[CONTENTLENGTH];
+    printf(\"*** Procrastination Simulator Level Two ***\\n\\n\");
+    printf(\"   Help! I need to write twenty reports by Sunday afternoon. Give me some content and I will generate a report!!\");
     puts(\"\");
     printf(\"> \");
     fflush(stdout);

