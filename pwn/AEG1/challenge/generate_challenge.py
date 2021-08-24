@@ -26,8 +26,8 @@ from random import seed
 seed = 22340897
 #seed(seed)
 
-N = 10
-level_one_threshold = 5
+N = 4
+level_one_threshold = 2
 #level_two_threshold = 4
 # challenges_per_level = 20 # Not used, just a note to myself here
 os.system("mkdir binaries")
@@ -38,7 +38,7 @@ for round_number in range(N, 0, -1):
     os.system("mkdir round_{}".format(round_number))
     os.chdir("./round_{}".format(round_number))
     password = create_password()
-    if N > level_one_threshold: # level 2
+    if round_number > level_one_threshold: # level 2
         generate_level_two_source_code(filename_stem="binary_{}".format(round_number), password=password, random_seed=seed)
         seed+=1
         os.system("gcc -fpie -no-pie binary_{0}.c -o binary_{0}".format(round_number))
