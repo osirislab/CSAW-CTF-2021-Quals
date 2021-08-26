@@ -1,3 +1,6 @@
+# Original Script by Kayla P.
+# Modified for challenge update
+
 #!/usr/bin/env python3
 from pwn import *
 import sys
@@ -23,9 +26,9 @@ r.recvline()
 print("Using angr...")
 
 #start of second_password
-addr_start = 0x4011f3
+addr_start = 0x4011f7
 #start of final_password
-addr_succ  = 0x401192
+addr_succ  = 0x401196
 
 proj = angr.Project(binary_name, load_options={'auto_load_libs': False})
 initial_state = proj.factory.blank_state(addr=addr_start)
@@ -36,13 +39,14 @@ initial_state.regs.rdx = claripy.BVV(0x14, 40)
 initial_state.regs.rsi = claripy.BVV(0, 40)
 initial_state.regs.rdi = a
 
-#I knew the range so made it even tighter to speed it up,
-#but regular user would likely do > 11111
-initial_state.solver.add(a > 11230)
-initial_state.solver.add(a < 11238)
-
+# PW is 4081368827
+initial_state.solver.add(a > 2000000000) # constraint from binary
+initial_state.solver.add(a < 4294967295) # max value of unsigned int
 simgr = proj.factory.simulation_manager(initial_state)
-simgr.explore(find=addr_succ)
+simgr.explore(find=addr_succ, avoid=0x401392)
+
+for result in simgr.found:
+	print(result) 
 
 found = simgr.found[0]
 

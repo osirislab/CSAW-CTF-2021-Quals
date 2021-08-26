@@ -11,7 +11,7 @@ void final_password(){
         puts("Goodbye!");
 }
 
-
+/*
 int second_password(unsigned long last_input){
 	int rem;
 	for(int i = 5; i <=10; i++){
@@ -25,6 +25,26 @@ int second_password(unsigned long last_input){
 			return 110;
 		}
 	}
+	puts("Sorry! That is not correct!\nGoodbye!\n");
+	return -1;
+}
+*/
+
+int second_password(unsigned long input){
+
+	int one = input % (input - 3458713659);
+	int two = input % 3;
+	int three = input / (((input % 100) * 2) - 1);
+	int four = input % 12;
+	int seven = input % 10;
+	int ten = 827;
+ 
+
+	if (one == 345,437,819 && two == 2 && three == 77006959 && four == (input % four) + 3 && seven == 7 && ten == (input % 1000)) {
+	final_password();
+	return 110;
+	}
+
 	puts("Sorry! That is not correct!\nGoodbye!\n");
 	return -1;
 }
@@ -60,7 +80,7 @@ int main() {
 		getchar();
 		puts("Please enter the second password");
 	        scanf(" %d", &last_input);
-		if(last_input > 11111){
+		if(last_input > 2000000000){
 			second_password(last_input);
 		}
 		return -1;
