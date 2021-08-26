@@ -1,0 +1,10 @@
+{
+    "name":"procrastination-simulator",
+    "category":"pwn",
+    "author": "N4T_20",
+    "description":"Can you write 60 papers and pwn 50 challenges by Sunday afternoon? `nc {box} {port}`",
+    "flag":"flag{c0ngr4tul4t10ns,4ut0-pwn3r!5h0ut0ut5_t0_UTCTF_f0r_th31r_3xc3ll3nt_AEG_ch4ll3ng3_1n_M4y}",
+    "points":300,
+    "files":[],
+    "internal_port": 5000
+}
