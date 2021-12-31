@@ -1,0 +1,3 @@
+[submodule "crypto/ECC-Pop-Quiz/ecgen"]
+	path = crypto/ECC-Pop-Quiz/ecgen
+	url = https://github.com/J08nY/ecgen.git
